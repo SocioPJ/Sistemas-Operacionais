@@ -18,15 +18,9 @@ public void execute() throws InterruptedException{
 @Override
 	public void run() {
 		try {
-			// Tenta consumir um número inteiro
 			while (true) {
                 execute();
-				// Dorme 200 ms
 				Thread.sleep(200);
-				// Ou comente a linha anterior e
-				// descomente a linha de baixo
-				// e dê a chance para outra thread
-				// Thread.yield();
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
