@@ -6,7 +6,16 @@ public class Client {
         this.account = account;
     }
 public void execute(){
-  
+    try {
+        // Tenta consumir um número inteiro
+        while (true) {
+            account.withdraw();
+            // Dorme 200 ms
+            Thread.sleep(200);
+        }
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+}
 }
 
-}
