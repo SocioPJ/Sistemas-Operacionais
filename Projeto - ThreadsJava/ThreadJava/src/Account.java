@@ -1,78 +1,79 @@
-import java.util.Random;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Account{
-    private final Lock lock = new ReentrantLock();
-	private final Condition bufferNotFull = lock.newCondition();
-	private static final int CAPACITY = 10;
+public class Account {
+	private double balance;
+	private static final int CAPACITY = 1;
 	private final Queue<Integer> queue = new LinkedList<>();
+
+	
+	private final Lock lock = new ReentrantLock();
+	private final Condition bufferNotFull = lock.newCondition();
 	private final Condition bufferNotEmpty = lock.newCondition();
-    Random random = new Random();
-    private int balance;
-    private double initialBalance;
-    public Account(double initialBalance) {
-        this.initialBalance = initialBalance;
-    }
-    
-    public void deposit(Integer number) throws InterruptedException{
-        lock.lock();
-		try {
-			// Se buffer estiver cheio, aguarda o consumidor consumir algum número
-			while (queue.size() == CAPACITY) {
-				System.out.println(Thread.currentThread().getName() +
-						" : Fila está cheia, aguardando...");
-				bufferNotEmpty.await();
-			}
-			// Adiciona um número na fila
-			boolean isAdded = queue.offer(number);
-			if (isAdded) {
-				System.out.printf("%s produziu %d na fila%n",
-						Thread.currentThread().getName(), number);
-				// Sinaliza a thread consumidor que ela pode consumir
-				System.out.println(Thread.currentThread().getName() +
-						" : Buffer já tem elemento!");
-				bufferNotFull.signalAll();
-			}
-		} finally {
-			lock.unlock();
-		}
-	}
-    
 
-    public void withdraw() throws InterruptedException{
-		lock.lock();
-		try {
-			// Se buffer estiver vazio, aguarda o produtor produzir algum número
-			while (queue.size() == 0) {
-				System.out.println(Thread.currentThread().getName() +
-						" : Conta sem saldo, aguardando depósito...");
-				bufferNotFull.await();
-			}
-			// Remove um número da fila
-			Integer value = queue.poll();
-			if (value != null) {
-				System.out.printf("%s Sacou %d da conta%n",
-						Thread.currentThread().getName(), value);
-				// Sinaliza a thread produtor que ela pode produzir
-				System.out.println(Thread.currentThread().getName() +
-						" : Buffer tem espaço!");
-				bufferNotEmpty.signalAll();
-			}
-		} finally {
-			lock.unlock();
-		}
-	}
-
-    public int getBalance() {
-        return balance;
-    }
-    public void setBalance(int balance) {
+	
+	public Account(double balance) {
         this.balance = balance;
     }
 
 
+    public void deposit(Integer number) throws InterruptedException {
+		lock.lock();
+		try {
+			
+			while (queue.size() == CAPACITY) {
+				System.out.println(Thread.currentThread().getName() +
+						" : Conta está cheia, aguarde...");
+				bufferNotEmpty.await();
+			}
+			
+			boolean isAdded = queue.offer(number);
+			if (isAdded) {
+				balance += number;
+                System.out.printf("%s depositou %d na conta%n",
+						Thread.currentThread().getName(), number);
+				System.out.printf("Saldo atual: %.2f%n", balance);
+				bufferNotFull.signalAll();
+			}
+		} 
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        finally {
+			lock.unlock();
+			Integer value = queue.poll();
+		}
+	}
+
+	
+    public void withdraw(Integer number) throws InterruptedException {
+		lock.lock();
+		try {
+			
+			while (queue.size() == CAPACITY) {
+				System.out.println(Thread.currentThread().getName() +
+						" : Conta está cheia, aguarde...");
+				bufferNotFull.await();
+			}
+			
+			boolean isAdded = queue.offer(number);
+			if (isAdded) {
+				balance -= number;
+                System.out.printf("%s sacou %d na conta%n",
+						Thread.currentThread().getName(), number);
+				System.out.printf("Saldo atual: %.2f%n", balance);
+				bufferNotEmpty.signalAll();
+			}
+		} 
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        finally {
+			lock.unlock();
+			Integer value = queue.poll();
+		}
+	}
 }
